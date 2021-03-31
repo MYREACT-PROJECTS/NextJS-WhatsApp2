@@ -26,7 +26,7 @@ export default function Chat({id,users}) {
    // console.log("id",id)
     return (
         <Container onClick={enterChat}>
-            {recipient ? (<UserAvatar src= {recipient?.photoURL}/>) : (
+            {recipient ? (<UserAvatar src= {recipient.photURL}/>) : (
               <UserAvatar>{recipientEmail[0]}</UserAvatar>
             )}
             

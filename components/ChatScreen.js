@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import styled from 'styled-components'
 import {auth, db} from '../firebase'
 import {useAuthState} from 'react-firebase-hooks/auth'
@@ -11,6 +11,7 @@ import { useCollection } from 'react-firebase-hooks/firestore'
  import Message from './Message'
  import getRecipientEmail from '../utilis/getRecipientEmail'
  import TimeAgo from 'timeago-react'
+ import {useRef} from 'react'
 
 
 
@@ -18,10 +19,12 @@ import { useCollection } from 'react-firebase-hooks/firestore'
      const [input,setInput]= useState("");
      const [user] =useAuthState(auth)
     const router= useRouter()
-   const recipientSnapshot= useCollection(db.collection("users").where('email','==',getRecipientEmail(chat.users,user)))
-   const recipient = recipientSnapshot?.docs?.[0].data()
+    const reE= getRecipientEmail(chat.users,user)
+    const endOfMessageRef= useRef(null)
+
+   const [recipientSnapshot]= useCollection(db.collection("users").where('email','==',reE))
+   const recipient = recipientSnapshot?.docs?.[0]?.data();
    const [messagesSnapshot] = useCollection(db.collection("chats").doc(router.query.id).collection("messages").orderBy("timestamp","asc"))
-  const reE= getRecipientEmail(chat.users,user)
     const showMessages =()=> {
       if (messagesSnapshot){
           return messagesSnapshot.docs.map(message=>(
@@ -47,7 +50,12 @@ import { useCollection } from 'react-firebase-hooks/firestore'
 
     }
 
-  
+  const ScrollToBottom=()=>{
+      endOfMessageRef.current.scrollIntoView({
+          behavior:"smooth",
+          block:"start",
+      })
+  }
 const sendMessage=(e)=>{
     e.preventDefault()
     db.collection("users").doc(user.uid).set({
@@ -62,9 +70,21 @@ const sendMessage=(e)=>{
     })
 
     setInput("")
+    ScrollToBottom()
 
 }
+  console.log("reipient",recipient)
+  console.log("reipientshot",recipientSnapshot)
+  console.log("chat",chat)
+  console.log("messages",messages)
+  console.log("email",reE)
   
+  useEffect(() => {
+    ScrollToBottom()
+
+   }, [])
+ 
+
     return (
         <Container>
             <Header>
@@ -77,14 +97,14 @@ const sendMessage=(e)=>{
                 }
                 <HeaderInformation>
                     <h3>{reE}</h3>
-                    {recipientSnapshot ?(
+                    {user ?(
                          <p>
                              last active : {''}
-                    {recipient?.lastSeen?.toDate() }
+                    {recipient?.lastSeen?.toDate()?
+                    (<TimeAgo datetime={recipient?.lastSeen?.toDate()}/>)
+                    : "UNAVAILABLE" }
                      </p>
-                     )
-                                
-                    :(<p>"ünavilable"</p> )  }
+                     ):(<p>"UNAVAILABLE"</p> )  }
                    
 
                 </HeaderInformation>
@@ -100,8 +120,8 @@ const sendMessage=(e)=>{
             </Header>
            
             <MessageConatiner>
-              {showMessages}
-               <EndOfMessage/>
+              {showMessages()}
+               <EndOfMessage ref= {endOfMessageRef}/>
             </MessageConatiner>
             <InputConatiner>
             <InsertEmoticon/>
@@ -174,7 +194,7 @@ flex:1;
 const HeaderIcon=styled.div``
 
 const MessageConatiner=styled.div`
-background-color:whitesmoke;
+background-color:#CACCCE;
 min-height:90vh;
 padding:30px;
 
@@ -183,7 +203,8 @@ padding:30px;
 
 `
 const EndOfMessage =styled.div`
-z-index:-1;`
+margin-bottom:70px;
+`
 const UserAvatar= styled(Avatar)`
 margin-left:15px
 `

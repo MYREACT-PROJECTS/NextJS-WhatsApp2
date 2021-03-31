@@ -23,7 +23,7 @@ import { useRouter } from "next/router";
             <ChatContainer>
                 <ChatScreen 
                 chat={chat}
-                mesages={messages}
+                messages={messages}
                 />
             </ChatContainer>
         </Container>
@@ -52,7 +52,7 @@ export async function getServerSideProps (context){
       ...chatRes.data()
   }
 
-  console.log(chat,messages) 
+  console.log("messages",messages) 
   return{
       props:{
           messages:JSON.stringify(messages),
